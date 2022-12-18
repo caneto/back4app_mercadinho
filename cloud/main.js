@@ -1,6 +1,7 @@
 const Product = Parse.Object.extend('Product');
 const Category = Parse.Object.extend('Category');
 const CartItem = Parse.Object.extend('CartItem');
+const Order = Parse.Object.extend('Order');
 
 // Use Parse.Cloud.define to define as many cloud functions as you want.
 // For example:
@@ -156,7 +157,7 @@ Parse.Cloud.define('get-cart-items', async (req) => {
 	queryCartItems.include('product.category');
 	const resultCartItems = await queryCartItems.find({useMasterKey: true});
 	return resultCartItems.map(function (c) {
-		c = c.toJSON();
+		c = c.toJSON;
 		return {
 			id: c.objectId,
 			quantity: c.quantity,
@@ -164,6 +165,28 @@ Parse.Cloud.define('get-cart-items', async (req) => {
 		}
 	});
 });
+
+Parse.Cloud.define('checkout', async (req) => {
+	const queryCartItems = new Parse.Query(CartItem);
+	queryCartItems.equalTo('user', req.user);
+	queryCartItems.include('product');
+	const resultCartItems = await queryCartItems.find({useMasterKey: true});
+
+	let total = 0;
+	for(let item of resultCartItems) {
+		item = item.toJSON();
+		total += item.quantity * item.product.price;
+	}
+
+	if(req.params.total != total) throw "INVALID_TOTAL";
+
+	return 'OK';
+});
+
+
+
+
+
 
 function formatUser(userJson) {
 	return {
