@@ -116,6 +116,7 @@ Parse.Cloud.define('reset-password', async (req) => {
 });
 
 Parse.Cloud.define('add-item-to-cart', async (req) => {
+	if(req.user == null) throw 'INVALID_USER';
 	if(req.params.quantity == null) throw 'INVALID_QUANTITY';
 	if(req.params.productId == null) throw 'INVALID_QUANTITY';
 
@@ -151,6 +152,8 @@ Parse.Cloud.define('modify-item-quantity', async (req) => {
 });
 
 Parse.Cloud.define('get-cart-items', async (req) => {
+	if(req.user == null) throw 'INVALID_USER';
+
 	const queryCartItems = new Parse.Query(CartItem);
 	queryCartItems.equalTo('user', req.user);
 	queryCartItems.include('product');
@@ -167,6 +170,8 @@ Parse.Cloud.define('get-cart-items', async (req) => {
 });
 
 Parse.Cloud.define('checkout', async (req) => {
+	if(req.user == null) throw 'INVALID_USER';
+
 	const queryCartItems = new Parse.Query(CartItem);
 	queryCartItems.equalTo('user', req.user);
 	queryCartItems.include('product');
@@ -180,7 +185,15 @@ Parse.Cloud.define('checkout', async (req) => {
 
 	if(req.params.total != total) throw "INVALID_TOTAL";
 
-	return 'OK';
+	const order = new Order();
+	order.set('total', total);
+	order.set('user', req.user);
+
+	const savedOrder = await order.save(null, {useMasterKey: true});
+
+	return {
+		id: savedOrder.id
+	}
 });
 
 
