@@ -1,7 +1,18 @@
+var GerenciaNet = require("gn-api-sdk-node");
+
 const Order = Parse.Object.extend('Order');
 const OrderItem = Parse.Object.extend('OrderItem');
 
 const product = require('./product');
+
+var options = {
+	sendbox: true,  // modo de teste
+	client_id: 'xxxxxxx',
+	client_secret: 'xxxxx',
+	pix_cert: __dirname + '/',  ///gerado pela GerenciaNet
+};
+
+var gerencianet = new Gerencianet(options);
 
 Parse.Cloud.define('checkout', async (req) => {
 	if(req.user == null) throw 'INVALID_USER';
